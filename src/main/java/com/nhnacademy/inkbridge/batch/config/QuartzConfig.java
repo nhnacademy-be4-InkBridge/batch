@@ -32,7 +32,7 @@ public class QuartzConfig {
             .forJob(job)
             .withIdentity("batchJobTrigger")
             .withDescription("Batch Job Trigger")
-            .withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(17, 51)) // 매일 1시에 실행
+            .withSchedule(CronScheduleBuilder.dailyAtHourAndMinute(9, 34)) // 매일 1시에 실행
             .build();
     }
 }
