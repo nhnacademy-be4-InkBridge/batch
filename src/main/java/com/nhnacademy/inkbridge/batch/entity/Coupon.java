@@ -11,17 +11,17 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /**
  * class: Coupon.
  *
- * @author nhn
- * @version 2024/02/08
+ * @author JBum
+ * @version 2024/03/20
  */
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Getter
 @Entity
 @Table(name = "coupon")
+@ToString
 public class Coupon {
 
     @Id
@@ -52,32 +52,12 @@ public class Coupon {
     @Column(name = "is_birth")
     private Boolean isBirth;
 
-    @ManyToOne
-    @JoinColumn(name = "coupon_type_id")
-    private CouponType couponType;
+    @Column(name = "coupon_type_id")
+    private Integer couponTypeId;
 
-    @ManyToOne
-    @JoinColumn(name = "coupon_status_id")
-    private CouponStatus couponStatus;
-
-    @Builder
-    public Coupon(String couponId, String couponName, Long minPrice, Long maxDiscountPrice,
-        Long discountPrice, LocalDate basicIssuedDate, LocalDate basicExpiredDate, Integer validity,
-        Boolean isBirth, CouponType couponType, CouponStatus couponStatus) {
-        this.couponId = couponId;
-        this.couponName = couponName;
-        this.minPrice = minPrice;
-        this.maxDiscountPrice = maxDiscountPrice;
-        this.discountPrice = discountPrice;
-        this.basicIssuedDate = basicIssuedDate;
-        this.basicExpiredDate = basicExpiredDate;
-        this.validity = validity;
-        this.isBirth = isBirth;
-        this.couponType = couponType;
-        this.couponStatus = couponStatus;
-    }
-
-    public void expireCoupon(){
-        this.couponStatus = CouponStatus.builder().couponStatusId(3).couponStatusName("EXPIRATION").build();
+    @Column(name = "coupon_status_id")
+    private Integer couponStatusId;
+    public void expire(){
+        this.couponStatusId = 3;
     }
 }

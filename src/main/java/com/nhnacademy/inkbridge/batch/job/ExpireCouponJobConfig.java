@@ -1,4 +1,4 @@
-package com.nhnacademy.inkbridge.batch.config;
+package com.nhnacademy.inkbridge.batch.job;
 
 import com.nhnacademy.inkbridge.batch.entity.Coupon;
 import javax.persistence.EntityManagerFactory;
@@ -18,6 +18,7 @@ import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteExcep
 import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.batch.item.database.JpaPagingItemReader;
 import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
 import org.springframework.context.annotation.Bean;
@@ -56,12 +57,13 @@ public class ExpireCouponJobConfig {
     public Job expireCouponJob() {
         return jobBuilderFactory.get("expireCouponJob")
             .incrementer(new RunIdIncrementer())
+            .preventRestart()
             .start(expireStep())
             .build();
     }
     @Bean
     public Step expireStep() {
-        return stepBuilderFactory.get("jpaPagingItemReaderStep")
+        return stepBuilderFactory.get("expireStep")
             .<Coupon, Coupon>chunk(chunkSize)
             .reader(expireLoad())
             .processor(expire())
@@ -70,8 +72,9 @@ public class ExpireCouponJobConfig {
     }
     @Bean
     public JpaPagingItemReader<Coupon> expireLoad() {
+        log.info("1");
         return new JpaPagingItemReaderBuilder<Coupon>()
-            .name("jpaPagingItemReader")
+            .name("expireLoad")
             .entityManagerFactory(entityManagerFactory)
             .pageSize(chunkSize)
             .queryString("SELECT c FROM Coupon c where c.basicExpiredDate < CURDATE() AND couponStatusId = 1")
@@ -79,6 +82,8 @@ public class ExpireCouponJobConfig {
     }
     @Bean
     public ItemProcessor<Coupon, Coupon> expire() {
+        log.info("2");
+
         return coupon -> {
             coupon.expire();
             return coupon;
@@ -87,13 +92,16 @@ public class ExpireCouponJobConfig {
 
     @Bean
     public ItemWriter<Coupon> couponWriter() {
+        log.info("3");
+
         return coupons -> {
             for (Coupon coupon : coupons) {
                 log.info(coupon.toString());
+
             }
         };
     }
-    @Scheduled(cron = "0 0 3 * * ?") // 매일 새벽 3시에
+    @Scheduled(cron = "30 * * * * ?") // 매일 새벽 3시에
     public void schedule()
         throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
         // 스프링 배치 작업 실행
