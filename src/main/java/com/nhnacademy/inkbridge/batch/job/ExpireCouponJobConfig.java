@@ -73,7 +73,6 @@ public class ExpireCouponJobConfig {
     }
     @Bean
     public JpaPagingItemReader<Coupon> expireLoad() {
-        log.info("1");
         return new JpaPagingItemReaderBuilder<Coupon>()
             .name("expireLoad")
             .entityManagerFactory(entityManagerFactory)
@@ -83,8 +82,6 @@ public class ExpireCouponJobConfig {
     }
     @Bean
     public ItemProcessor<Coupon, Coupon> expire() {
-        log.info("2");
-
         return coupon -> {
             coupon.expire();
             return coupon;
@@ -93,8 +90,6 @@ public class ExpireCouponJobConfig {
 
     @Bean
     public ItemWriter<Coupon> couponWriter() {
-        log.info("3");
-
         return coupons -> {
             for (Coupon coupon : coupons) {
                 log.info(coupon.toString());
@@ -102,7 +97,7 @@ public class ExpireCouponJobConfig {
             }
         };
     }
-    @Scheduled(cron = "0 0 * * *")
+    @Scheduled(cron = "0 0 * * * *")
     public void schedule()
         throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
         // 스프링 배치 작업 실행
