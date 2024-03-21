@@ -1,6 +1,7 @@
 package com.nhnacademy.inkbridge.batch.job;
 
 import com.nhnacademy.inkbridge.batch.entity.Coupon;
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -18,7 +19,6 @@ import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteExcep
 import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.batch.item.database.JpaPagingItemReader;
 import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
 import org.springframework.context.annotation.Bean;
@@ -42,22 +42,23 @@ public class ExpireCouponJobConfig {
     private final StepBuilderFactory stepBuilderFactory;
     private final EntityManagerFactory entityManagerFactory;
     private final JobLauncher jobLauncher;
+    private final EntityManager entityManager;
     private static final int chunkSize = 10;
 
     public ExpireCouponJobConfig(JobBuilderFactory jobBuilderFactory,
         StepBuilderFactory stepBuilderFactory, EntityManagerFactory entityManagerFactory,
-        JobLauncher jobLauncher) {
+        JobLauncher jobLauncher, EntityManager entityManager) {
         this.jobBuilderFactory = jobBuilderFactory;
         this.stepBuilderFactory = stepBuilderFactory;
         this.entityManagerFactory = entityManagerFactory;
         this.jobLauncher = jobLauncher;
+        this.entityManager = entityManager;
     }
 
     @Bean
     public Job expireCouponJob() {
         return jobBuilderFactory.get("expireCouponJob")
             .incrementer(new RunIdIncrementer())
-            .preventRestart()
             .start(expireStep())
             .build();
     }
@@ -97,11 +98,11 @@ public class ExpireCouponJobConfig {
         return coupons -> {
             for (Coupon coupon : coupons) {
                 log.info(coupon.toString());
-
+                entityManager.merge(coupon);
             }
         };
     }
-    @Scheduled(cron = "30 * * * * ?") // 매일 새벽 3시에
+    @Scheduled(cron = "0 0 * * *")
     public void schedule()
         throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException, JobParametersInvalidException, JobRestartException {
         // 스프링 배치 작업 실행
