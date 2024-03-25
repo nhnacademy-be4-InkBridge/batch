@@ -96,4 +96,8 @@ public class Coupon {
             .couponStatusId(1)
             .build();
     }
+
+    public void normal() {
+        this.couponStatusId=1;
+    }
 }
